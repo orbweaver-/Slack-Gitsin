@@ -44,9 +44,13 @@ for i in response["members"]:
         }
     )
 
+coms = []
+for c in channels.keys():
+    coms.append("#" + c)
+
+coms.append('list')
 
 SUBCOMMANDS = {
-
 	"channels.history"  : "Fetches history of messages and events from a channel.",
 	"channels.join"  	: "Joins a channel",
 	"channels.list"  	: "Lists all channels in a Slack team.",
@@ -58,6 +62,7 @@ SUBCOMMANDS = {
 	"users.list"        : "Lists all users in a Slack team."
 
 }
+
 ARGS_OPTS_LOOKUP = {
 
     'channels.history': {

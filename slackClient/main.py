@@ -42,7 +42,6 @@ from threading import Event, Thread
 
 manager = KeyBindingManager.for_prompt()
 
-
 def find_user_name(user_id):
     url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
     response = requests.get(url).json()
@@ -114,11 +113,11 @@ def _(event):
 def main():
     """
          Start the Slack Client
-    """
     if windows:
         os.system("cls")
     else:
         os.system("clear; figlet 'Slack Gitsin' | lolcat")
+    """
     history = FileHistory(os.path.expanduser("~/.slackHistory"))
     while True:
         text = prompt("slack> ", history=history,

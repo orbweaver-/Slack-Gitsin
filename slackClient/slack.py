@@ -25,12 +25,6 @@ windows = _platform == "win32"
 
 lString = ""
 
-if os.path.isfile("channels.json"):
-    channels = json.load(open("channels.json", "r"))
-else:
-    json.dump({}, open("channels.json", "w+"))
-    channels = {}
-
 if os.path.isfile("users.json"):
     users = json.load(open("users.json", "r"))
 else:
@@ -48,11 +42,15 @@ class Slack(object):
         self.text = text
 
     def get_channels_list(self):
-        # create slack channels list
-        channels = []
+        if os.path.isfile("channels.json"):
+            return json.load(open("channels.json", "r"))["channels"]
         url = "https://www.slack.com/api/channels.list?token={token}".format(token=settings.token)
-        response = requests.get(url).json()
-        return response["channels"]
+        channels = requests.get(url).json()
+        json.dump(channels, open("channels.json", "w+"))
+        if channels["ok"]:
+            return channels["channels"]
+        else:
+            print "API error"
 
     def channels_join(self, name):
         url = "https://www.slack.com/api/channels.join?token={token}&name={name}".format(token=settings.token,
@@ -202,16 +200,10 @@ class Slack(object):
             print "something goes wrong :( (\u001b[1m\u001b[31m " + response["error"] + "\u001b[0m)"
 
     def find_channel_id(self, channel_name):
-        if channel_name in channels:
-            return channels[channel_name]
-        url = "https://www.slack.com/api/channels.list?token={token}".format(token=settings.token)
-        response = requests.get(url).json()
-        for i in response["channels"]:
-            if i["name"] == channel_name:
-                channels[channel_name] = i["id"]
-                json.dump(channels, open("channels.json", "w+"))
-                return i["id"]
-        return None
+        channels = self.get_channels_list()
+        for c in channels:
+            if c["name"] == channel_name:
+                return c["id"]
 
     def find_user_id(self, user_name):
         url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
@@ -294,13 +286,20 @@ class Slack(object):
             text = re.sub('```.*```', formatted, text, 1, re.DOTALL)
         return text
 
-    def print_channels_list(self, response):
-        os.system("clear; figlet '" + "All Channels" + "'" + lString)
-        text = ""
-        for i in response:
-            text += i["name"] + "\t\t" + "(created {when})\n".format(when=time.ctime(float(i["created"])))
-        # print and reset text
-        os.system("echo ' " + text + "' | lolcat")
+    def print_channels_list(self, channels):
+        text = Style.BRIGHT
+        colors = [Fore.YELLOW, Fore.RED]
+        i = True
+        for c in channels:
+            if i:
+                text += colors[0]
+            else:
+                text += colors[1]
+            text += "#" + c["name"] + "\n"
+            i = not i
+
+        text += Style.RESET_ALL
+        sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
 
     def print_users_info(self, response):
         os.system("clear; figlet '" + "User Info" + "'" + lString)
@@ -315,6 +314,15 @@ class Slack(object):
     def run_command(self):
         try:
             split_text = self.text.split(" ")
+
+            if split_text[0][0] == "#":
+                if len(split_text) == 1:
+                    return self.channels_history(split_text[0][1:])
+
+            if split_text[0] == "list":
+                if split_text[1] == "channels":
+                    self.print_channels_list(self.get_channels_list())
+
             if split_text[1] == "channels.list":
                 response = self.get_channels_list()
                 self.print_channels_list(response)

@@ -7,7 +7,7 @@ from __future__ import print_function
 
 from prompt_toolkit.completion import Completer
 
-from completions import SUBCOMMANDS, ARGS_OPTS_LOOKUP
+from completions import SUBCOMMANDS, ARGS_OPTS_LOOKUP, coms
 
 #adapted from haxor-news project
 class Completer(Completer):
@@ -67,30 +67,21 @@ class Completer(Completer):
         commands = []
         if len(words) == 0:
             return commands
+
         if self.completing_command(words, word_before_cursor):
-            commands = ['slack']
-        else:
-            if 'slack' not in words:
-                return commands
-            if self.completing_subcommand(words, word_before_cursor):
-                commands = list(SUBCOMMANDS.keys())
-            else:
-                if self.completing_arg(words, word_before_cursor):
-                    commands = self.arg_completions(words, word_before_cursor)
-                else:
-                    commands = self.completing_subcommand_option(
-                        words,
-                        word_before_cursor)
+            commands = coms
+        elif self.completing_subcommand(words, word_before_cursor):
+            if words[0] == "list":
+                commands = ["channels", "users"]
+        
         completions = self.text_utils.find_matches(
             word_before_cursor, commands, fuzzy=self.fuzzy_match)
         return completions
-        
+
     def arg_completions(self, words, word_before_cursor):
         """
             Generates arguments completions based on the input.
         """
-        if 'slack' not in words:
-            return []
         for subcommand, args_opts in ARGS_OPTS_LOOKUP.items():
             if subcommand in words:
                 return [ARGS_OPTS_LOOKUP[subcommand]['args']]
