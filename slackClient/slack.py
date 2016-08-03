@@ -9,6 +9,9 @@ import os
 import subprocess
 import time
 import slackclient  # for real time parts
+import re
+import json
+import sys
 
 from prettytable import PrettyTable
 from prompt_toolkit import prompt
@@ -16,7 +19,29 @@ from prompt_toolkit.contrib.completers import WordCompleter
 
 from completions import users
 from style import DocumentStyle
+from settings import lolcat
+from sys import platform as _platform
+windows = _platform == "win32"
 
+lString = ""
+
+if os.path.isfile("channels.json"):
+    channels = json.load(open("channels.json", "r"))
+else:
+    json.dump({}, open("channels.json", "w+"))
+    channels = {}
+
+if os.path.isfile("users.json"):
+    users = json.load(open("users.json", "r"))
+else:
+    json.dump({}, open("users.json", "w+"))
+    users = {}
+
+from colorama import init, Fore, Back, Style
+init()
+
+if lolcat:
+    lString = " | lolcat"
 
 class Slack(object):
     def __init__(self, text):
@@ -34,7 +59,7 @@ class Slack(object):
                                                                                      name=name)
         response = requests.get(url).json()
         if response["ok"]:
-            os.system("figlet 'Joined' | lolcat")
+            os.system("figlet 'Joined'" + lString)
             time.sleep(2)
             os.system("clear")
         else:
@@ -43,13 +68,24 @@ class Slack(object):
     def channels_history(self, channel_name):
         # Retrieve channel id by using channel_name
         channel_id = self.find_channel_id(channel_name)
-        url = "https://slack.com/api/channels.history?token={token}&channel={channel_id}".format(token=settings.token,
-                                                                                                 channel_id=channel_id)
+
+        url = "https://slack.com/api/channels.info?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
         response = requests.get(url).json()
         if response['ok']:
-            self.print_history(response, channel_name)
+            if os.path.isfile("messages/" + channel_id + ".json") and response["channel"]["unread_count"] == 0 :
+                res = json.load(open("messages/" + channel_id + ".json", "r"))
+                self.print_history(res, channel_name)
+            else:
+                url = "https://slack.com/api/channels.history?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
+                response = requests.get(url).json()
+                if response['ok']:
+                    json.dump(response, open("messages/" + channel_id + ".json", "w+"))
+                    self.print_history(response, channel_name)
+                else:
+                    print "something goes wrong!"
         else:
             print "something goes wrong!"
+
 
     def post_message(self, channel_name):
         # self.channels_history(channel_name)
@@ -63,7 +99,7 @@ class Slack(object):
         response = requests.get(url).json()
         # TODO : retrieve message history and print to screen while chatting
         if response["ok"]:
-            os.system("figlet 'Sent' | lolcat")
+            os.system("figlet 'Sent'" + lString)
             time.sleep(2)
             os.system("clear")
         else:
@@ -81,7 +117,7 @@ class Slack(object):
                 user=user_id)
             response = requests.get(url).json()
             if response["ok"]:
-                os.system("figlet 'Invited " + i + "' | lolcat")
+                os.system("figlet 'Invited " + i + lString)
                 time.sleep(2)
                 os.system("clear")
             else:
@@ -106,7 +142,7 @@ class Slack(object):
         response = requests.get(url).json()
         # TODO :  send channel and user_id to channels_invite
         if response["ok"]:
-            os.system("figlet 'Created' | lolcat")
+            os.system("figlet 'Created'" + lString)
             time.sleep(2)
             os.system("clear")
 
@@ -160,17 +196,21 @@ class Slack(object):
             initial_comment=initial_comment)
         response = requests.get(url).json()
         if response["ok"]:
-            os.system("figlet 'Uploaded!' | lolcat")
+            os.system("figlet 'Uploaded!'" + lString)
             time.sleep(2)
             os.system("clear")
         else:
             print "something goes wrong :( (\u001b[1m\u001b[31m " + response["error"] + "\u001b[0m)"
 
     def find_channel_id(self, channel_name):
+        if channel_name in channels:
+            return channels[channel_name]
         url = "https://slack.com/api/channels.list?token={token}".format(token=settings.token)
         response = requests.get(url).json()
         for i in response["channels"]:
             if i["name"] == channel_name:
+                channels[channel_name] = i["id"]
+                json.dump(channels, open("channels.json", "w+"))
                 return i["id"]
         return None
 
@@ -183,32 +223,44 @@ class Slack(object):
         return None
 
     def find_user_name(self, user_id):
+        if user_id in users:
+            return users[user_id]
         url = "https://slack.com/api/users.list?token={token}".format(token=settings.token)
         response = requests.get(url).json()
         for i in response["members"]:
             if i["id"] == user_id:
+                users[user_id] = i["name"]
+                json.dump(users, open("users.json", "w+"))
                 return i["name"]
         return None
 
     def print_history(self, response, channel_name):
-        os.system("clear; figlet '" + channel_name + "' | lolcat")
+        if windows:
+            os.system("clear;"+ lString)
+        else:
+            os.system("clear; figlet '" + channel_name + "'" + lString)
+
         response["messages"].reverse()
-        text = ""
         for i in response["messages"]:
+            # add time
+            text = Style.RESET_ALL + Fore.YELLOW + Style.DIM + " [" + time.ctime(float(i["ts"])) + "] \n" + Style.BRIGHT + " @"
+            # Get username
             if "user" in i:
-                text += "\033[31m" + self.find_user_name(i["user"]) + "\033[0m" + "\t\t"
+                text += self.find_user_name(i["user"]) + ": "
             elif "username" in i:
-                text += "\033[31m" + (i["username"].encode('ascii', 'ignore').decode('ascii')) + "\033[0m" + "\t"
-            text += "\033[93m" + time.ctime(float(i["ts"])) + "\033[0m" + "\n"
+                text +=  i["username"] + ": "
+
             # replace username_id with username
-            if "<@" in i["text"]:
-                i["text"] = "<" + i["text"].split("|")[1]
-            text += (i["text"].encode('ascii', 'ignore').decode('ascii')) + "\n\n"
-            os.system("echo ' " + text + "'")
-            text = ""
+            while re.search('<@.........>', i["text"]):
+                orig = re.search('<@.........>', i["text"]).group(0)
+                at = Fore.RED + Style.BRIGHT + "@" + self.find_user_name(orig[2:-1]) + Style.RESET_ALL
+                i["text"] = re.sub(orig, at, i["text"])
+            text += Style.RESET_ALL + i["text"] + '\n\n'
+
+            sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
 
     def print_channels_list(self, response):
-        os.system("clear; figlet '" + "All Channels" + "' | lolcat")
+        os.system("clear; figlet '" + "All Channels" + "'" + lString)
         text = ""
         for i in response:
             text += i["name"] + "\t\t" + "(created {when})\n".format(when=time.ctime(float(i["created"])))
@@ -216,14 +268,14 @@ class Slack(object):
         os.system("echo ' " + text + "' | lolcat")
 
     def print_users_info(self, response):
-        os.system("clear; figlet '" + "User Info" + "' | lolcat")
+        os.system("clear; figlet '" + "User Info" + "'" + lString)
         text = "name : " + response["name"] + "\n"
         for (key, value) in response["profile"].items():
             if type(value) == "str":
                 text += key + " - > " + value + "\n"
             else:
                 text += key + " - > " + str(value) + "\n"
-        os.system("echo '" + text + "' | lolcat")
+        os.system("echo '" + text + "'" + lString)
 
     def run_command(self):
         try:

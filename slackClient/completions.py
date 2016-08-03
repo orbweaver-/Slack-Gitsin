@@ -4,13 +4,18 @@
 import settings
 import requests
 
-# create slack channels list 
+# create slack channels list
 channels = {}
 non_member_channels = {}
-# get user_id
-url = "https://slack.com/api/auth.test?token={token}".format(token=settings.token)
-response = requests.get(url).json()
-user_id = response["user_id"]
+try:
+    # get user_id
+    url = "https://slack.com/api/auth.test?token={token}".format(token=settings.token)
+    print url
+    response = requests.get(url).json()
+    user_id = response["user_id"]
+except KeyError:
+    raise NameError("Oath token is invalid")
+
 
 # get channels that our user already member to show him
 url = "https://slack.com/api/channels.list?token={token}".format(token=settings.token)

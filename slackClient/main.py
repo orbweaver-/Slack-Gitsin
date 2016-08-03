@@ -25,6 +25,8 @@ from prompt_toolkit.interface import AcceptAction
 from prompt_toolkit.token import Token
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.keys import Keys
+from sys import platform as _platform
+windows = _platform == "win32"
 
 from utils import TextUtils
 from completer import Completer
@@ -94,7 +96,7 @@ def get_bottom_toolbar_tokens(cli):
 @manager.registry.add_binding(Keys.F10)
 def _(event):
     def exit():
-        """ 
+        """
             Quit when the `F10` key is pressed
         """
         pid = os.getpid()
@@ -106,10 +108,13 @@ def _(event):
 
 
 def main():
-    """ 
-         Start the Slack Client 
     """
-    os.system("clear; figlet 'Slack Gitsin' | lolcat")
+         Start the Slack Client
+    """
+    if windows:
+        os.system("clear;")
+    else:
+        os.system("clear; figlet 'Slack Gitsin' | lolcat")
     history = FileHistory(os.path.expanduser("~/.slackHistory"))
     while True:
         text = prompt("slack> ", history=history,
