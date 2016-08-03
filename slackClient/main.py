@@ -3,7 +3,6 @@
 
 
 from __future__ import unicode_literals
-import settings
 
 import requests
 import requests.packages.urllib3
@@ -14,6 +13,11 @@ import os
 import signal
 import slackclient  #for real time parts
 import time
+
+if os.path.isfile("settings.py"):
+    import settings
+else:
+    raise NameError('Please create a settings.py file')
 
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
@@ -40,7 +44,7 @@ manager = KeyBindingManager.for_prompt()
 
 
 def find_user_name(user_id):
-    url = "https://slack.com/api/users.list?token={token}".format(token=settings.token)
+    url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
     response = requests.get(url).json()
     for i in response["members"]:
         if i["id"] == user_id:
@@ -50,7 +54,7 @@ def find_user_name(user_id):
 
 def get_alert(text):
     #TODO : add notification sound
-    url = "https://slack.com/api/auth.test?token={token}".format(token=settings.token)
+    url = "https://www.slack.com/api/auth.test?token={token}".format(token=settings.token)
     response = requests.get(url).json()
     my_user_id = "<@" + response["user_id"] + ">"
     for i in text:
@@ -112,7 +116,7 @@ def main():
          Start the Slack Client
     """
     if windows:
-        os.system("clear;")
+        os.system("cls")
     else:
         os.system("clear; figlet 'Slack Gitsin' | lolcat")
     history = FileHistory(os.path.expanduser("~/.slackHistory"))

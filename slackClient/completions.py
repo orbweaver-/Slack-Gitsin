@@ -9,8 +9,7 @@ channels = {}
 non_member_channels = {}
 try:
     # get user_id
-    url = "https://slack.com/api/auth.test?token={token}".format(token=settings.token)
-    print url
+    url = "https://www.slack.com/api/auth.test?token={token}".format(token=settings.token)
     response = requests.get(url).json()
     user_id = response["user_id"]
 except KeyError:
@@ -18,7 +17,7 @@ except KeyError:
 
 
 # get channels that our user already member to show him
-url = "https://slack.com/api/channels.list?token={token}".format(token=settings.token)
+url = "https://www.slack.com/api/channels.list?token={token}".format(token=settings.token)
 response = requests.get(url).json()
 for i in response["channels"]:
     if i["is_member"]:
@@ -36,7 +35,7 @@ for i in response["channels"]:
 
 # get user list
 users = {}
-url = "https://slack.com/api/users.list?token={token}".format(token=settings.token)
+url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
 response = requests.get(url).json()
 for i in response["members"]:
     users.update(

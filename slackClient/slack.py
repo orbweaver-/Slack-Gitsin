@@ -50,12 +50,12 @@ class Slack(object):
     def get_channels_list(self):
         # create slack channels list
         channels = []
-        url = "https://slack.com/api/channels.list?token={token}".format(token=settings.token)
+        url = "https://www.slack.com/api/channels.list?token={token}".format(token=settings.token)
         response = requests.get(url).json()
         return response["channels"]
 
     def channels_join(self, name):
-        url = "https://slack.com/api/channels.join?token={token}&name={name}".format(token=settings.token,
+        url = "https://www.slack.com/api/channels.join?token={token}&name={name}".format(token=settings.token,
                                                                                      name=name)
         response = requests.get(url).json()
         if response["ok"]:
@@ -68,15 +68,14 @@ class Slack(object):
     def channels_history(self, channel_name):
         # Retrieve channel id by using channel_name
         channel_id = self.find_channel_id(channel_name)
-
-        url = "https://slack.com/api/channels.info?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
+        url = "https://www.slack.com/api/channels.info?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
         response = requests.get(url).json()
         if response['ok']:
             if os.path.isfile("messages/" + channel_id + ".json") and response["channel"]["unread_count"] == 0 :
                 res = json.load(open("messages/" + channel_id + ".json", "r"))
                 self.print_history(res, channel_name)
             else:
-                url = "https://slack.com/api/channels.history?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
+                url = "https://www.slack.com/api/channels.history?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
                 response = requests.get(url).json()
                 if response['ok']:
                     json.dump(response, open("messages/" + channel_id + ".json", "w+"))
@@ -92,7 +91,7 @@ class Slack(object):
         os.system("echo '\u001b[1m\u001b[31m  To mention a user write @ while chatting \u001b[0m'")
         text = prompt("your message > ", completer=WordCompleter(users))
         channel_id = self.find_channel_id(channel_name)
-        url = "https://slack.com/api/chat.postMessage?token={token}&channel={channel_id}&text={text}&as_user=true&link_names=1".format(
+        url = "https://www.slack.com/api/chat.postMessage?token={token}&channel={channel_id}&text={text}&as_user=true&link_names=1".format(
             token=settings.token,
             text=text,
             channel_id=channel_id)
@@ -111,7 +110,7 @@ class Slack(object):
                          style=DocumentStyle)
         for i in invites.split(" "):
             user_id = self.find_user_id(i.strip("@"))
-            url = "https://slack.com/api/channels.invite?token={token}&channel={channel_id}&user={user}".format(
+            url = "https://www.slack.com/api/channels.invite?token={token}&channel={channel_id}&user={user}".format(
                 token=settings.token,
                 channel_id=channel_id,
                 user=user_id)
@@ -135,7 +134,7 @@ class Slack(object):
                 invites = prompt("send invites -> ", completer=WordCompleter(users),
                                  style=DocumentStyle)
 
-        url = "https://slack.com/api/channels.create?token={token}&name={name}&purpose={purpose}".format(
+        url = "https://www.slack.com/api/channels.create?token={token}&name={name}&purpose={purpose}".format(
             token=settings.token,
             name=name,
             purpose=purpose)
@@ -150,7 +149,7 @@ class Slack(object):
         # get user list
         os.system("clear")
         users = {};
-        url = "https://slack.com/api/users.list?token={token}".format(token=settings.token)
+        url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
         response = requests.get(url).json()
         text = PrettyTable(["name", "tz", "tz_label", "email"])
         for i in response["members"]:
@@ -161,7 +160,7 @@ class Slack(object):
 
     def users_info(self, user_name):
         user_id = self.find_user_id(user_name.strip("@"))
-        url = "https://slack.com/api/users.info?token={token}&user={user_id}".format(token=settings.token,
+        url = "https://www.slack.com/api/users.info?token={token}&user={user_id}".format(token=settings.token,
                                                                                      user_id=user_id)
         response = requests.get(url).json()
         if response["ok"]:
@@ -187,7 +186,7 @@ class Slack(object):
             else:
                 initial_comment = prompt("add comment : ", completer=WordCompleter(users),
                                          style=DocumentStyle)
-        url = "https://slack.com/api/files.upload?token={token}&content={content}&filename={filename}&channels={channel_id}&title={title}&initial_comment={initial_comment}".format(
+        url = "https://www.slack.com/api/files.upload?token={token}&content={content}&filename={filename}&channels={channel_id}&title={title}&initial_comment={initial_comment}".format(
             token=settings.token,
             content=content,
             filename=filename,
@@ -205,7 +204,7 @@ class Slack(object):
     def find_channel_id(self, channel_name):
         if channel_name in channels:
             return channels[channel_name]
-        url = "https://slack.com/api/channels.list?token={token}".format(token=settings.token)
+        url = "https://www.slack.com/api/channels.list?token={token}".format(token=settings.token)
         response = requests.get(url).json()
         for i in response["channels"]:
             if i["name"] == channel_name:
@@ -215,7 +214,7 @@ class Slack(object):
         return None
 
     def find_user_id(self, user_name):
-        url = "https://slack.com/api/users.list?token={token}".format(token=settings.token)
+        url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
         response = requests.get(url).json()
         for i in response["members"]:
             if i["name"] == user_name:
@@ -225,7 +224,7 @@ class Slack(object):
     def find_user_name(self, user_id):
         if user_id in users:
             return users[user_id]
-        url = "https://slack.com/api/users.list?token={token}".format(token=settings.token)
+        url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
         response = requests.get(url).json()
         for i in response["members"]:
             if i["id"] == user_id:
@@ -236,28 +235,64 @@ class Slack(object):
 
     def print_history(self, response, channel_name):
         if windows:
-            os.system("clear;"+ lString)
+            os.system("cls;"+ lString)
         else:
             os.system("clear; figlet '" + channel_name + "'" + lString)
 
         response["messages"].reverse()
         for i in response["messages"]:
             # add time
-            text = Style.RESET_ALL + Fore.YELLOW + Style.DIM + " [" + time.ctime(float(i["ts"])) + "] \n" + Style.BRIGHT + " @"
-            # Get username
-            if "user" in i:
-                text += self.find_user_name(i["user"]) + ": "
-            elif "username" in i:
-                text +=  i["username"] + ": "
+            text = Style.RESET_ALL + Fore.YELLOW + Style.DIM + "[" + time.ctime(float(i["ts"])) + "] \n"
 
-            # replace username_id with username
-            while re.search('<@.........>', i["text"]):
-                orig = re.search('<@.........>', i["text"]).group(0)
-                at = Fore.RED + Style.BRIGHT + "@" + self.find_user_name(orig[2:-1]) + Style.RESET_ALL
-                i["text"] = re.sub(orig, at, i["text"])
-            text += Style.RESET_ALL + i["text"] + '\n\n'
+            if "upload" in i and "file" in i and i["upload"] == True:
+                content = Fore.RED + Style.BRIGHT
+                if "pretty_type" in i["file"]:
+                    content += i["file"]["pretty_type"] + " "
+                content += "UPLOAD: by @" + self.find_user_name(i["file"]["user"]) + "\n"
+                if "url_private" in i["file"]:
+                    content += Style.RESET_ALL + Back.WHITE + Fore.BLUE + i["file"]["url_private"] + Style.RESET_ALL
+                if "initial_comment" in i["file"]:
+                    content += Fore.RED + Style.BRIGHT + "\n@" + self.find_user_name(i["file"]["initial_comment"]["user"]) + ": "
+                    content += Style.RESET_ALL + self.format_text(i["file"]["initial_comment"]["comment"])
+                text += Style.RESET_ALL + content + '\n\n'
+            else:
+                # Get username
+                text += Style.BRIGHT + "@"
+                if "user" in i:
+                    text += self.find_user_name(i["user"]) + ": "
+                elif "username" in i:
+                    text += i["username"] + ": "
+
+                # Add the text
+                text += Style.RESET_ALL + self.format_text(i["text"]) + '\n\n'
 
             sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
+
+    def format_text(self, text):
+        # replace username_id with username
+        while re.search('<@.........>', text):
+            orig = re.search('<@.........>', text).group(0)
+            at = Fore.RED + Style.BRIGHT + "@" + self.find_user_name(orig[2:-1]) + Style.RESET_ALL
+            text = re.sub(orig, at, text, 1)
+
+        # replace given usernames\code with username
+        while re.search('<@.........\|\S*>', text):
+            orig = re.search('\|\S*>', text).group(0)
+            at = Fore.RED + Style.BRIGHT + "@" + orig[1:-1] + Style.RESET_ALL
+            text = re.sub('<@.........\|\S*>', at, text, 1)
+
+        # format URLs
+        while re.search('<https*:\/\/.*>', text):
+            orig = re.search('<https*:\/\/.*>', text).group(0)
+            formatted = Back.WHITE + Fore.BLUE + orig[1:-1] + Style.RESET_ALL
+            text = re.sub('<https*:\/\/.*>', formatted, text, 1)
+
+        # format long code
+        while re.search('```.*```', text, re.DOTALL):
+            orig = re.search('```.*```', text, re.DOTALL).group(0)
+            formatted = Back.WHITE + Fore.BLACK + orig[3:-3] + Style.RESET_ALL
+            text = re.sub('```.*```', formatted, text, 1, re.DOTALL)
+        return text
 
     def print_channels_list(self, response):
         os.system("clear; figlet '" + "All Channels" + "'" + lString)
