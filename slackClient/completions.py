@@ -3,6 +3,7 @@
 
 import settings
 import requests
+import json
 
 # create slack channels list
 channels = {}
@@ -36,8 +37,8 @@ for i in response["channels"]:
 # get user list
 users = {}
 url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
-response = requests.get(url).json()
-for i in response["members"]:
+members = requests.get(url).json()["members"]
+for i in members:
     users.update(
         {
             "@" + i["name"] : i["id"]
@@ -49,6 +50,16 @@ for c in channels.keys():
     coms.append("#" + c)
 
 coms.append('list')
+
+url = "https://www.slack.com/api/im.list?token={token}".format(token=settings.token)
+response = requests.get(url).json()
+if response["ok"]:
+    json.dump(response, open("ims.json", "w+"))
+    for i in response["ims"]:
+        for u in members:
+            if u["id"] == i["user"]:
+                coms.append("@" + u["name"])
+                break
 
 SUBCOMMANDS = {
 	"channels.history"  : "Fetches history of messages and events from a channel.",

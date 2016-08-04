@@ -70,13 +70,17 @@ class Slack(object):
         response = requests.get(url).json()
         if response['ok']:
             if os.path.isfile("messages/" + channel_id + ".json") and response["channel"]["unread_count"] == 0 :
-                res = json.load(open("messages/" + channel_id + ".json", "r"))
+                res = json.load(open("messages/" + channel_id + ".json", "r"))["messages"]
+                res.reverse()
+                print type(res)
                 self.print_history(res, channel_name)
             else:
                 url = "https://www.slack.com/api/channels.history?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
                 response = requests.get(url).json()
                 if response['ok']:
                     json.dump(response, open("messages/" + channel_id + ".json", "w+"))
+                    response = response["messages"]
+                    response.reverse()
                     self.print_history(response, channel_name)
                 else:
                     print "something goes wrong!"
@@ -225,14 +229,12 @@ class Slack(object):
                 return i["name"]
         return None
 
-    def print_history(self, response, channel_name):
+    def print_history(self, messages, channel_name):
         if windows:
             os.system("cls;"+ lString)
         else:
             os.system("clear; figlet '" + channel_name + "'" + lString)
-
-        response["messages"].reverse()
-        for i in response["messages"]:
+        for i in messages:
             # add time
             text = Style.RESET_ALL + Fore.YELLOW + Style.DIM + "[" + time.ctime(float(i["ts"])) + "] \n"
 
@@ -311,13 +313,44 @@ class Slack(object):
                 text += key + " - > " + str(value) + "\n"
         os.system("echo '" + text + "'" + lString)
 
+    def users_history(self, username):
+        channel_id = self.get_im_channel_id(username)
+        url = "https://www.slack.com/api/im.history?token={token}&channel={channel_id}".format(token=settings.token,channel_id=channel_id)
+        response = requests.get(url).json()
+        if response["ok"]:
+            response["messages"].reverse()
+            self.print_history(response["messages"], "@" + username)
+        else:
+            print "API ERROR"
+
+    def get_im_channel_id(self, username):
+        ims = json.load(open("ims.json", "r"))
+        user_id = self.find_user_id(username)
+        channel_id = ""
+        for im in ims["ims"]:
+            if im["user"] == user_id:
+                channel_id = im["id"]
+        return channel_id
+
+    def send_message(self, channel_id, message):
+        url = "https://www.slack.com/api/chat.postMessage?token={token}&channel={channel_id}&text={message}&as_user=true&link_names=1".format(token=settings.token,channel_id=channel_id,message=message)
+        response = requests.get(url).json()
+        if response["ok"]:
+            print "Sent Successfully"
+        else:
+            print "API error"
+
     def run_command(self):
         try:
             split_text = self.text.split(" ")
-
             if split_text[0][0] == "#":
                 if len(split_text) == 1:
                     return self.channels_history(split_text[0][1:])
+            if split_text[0][0] == "@":
+                if len(split_text) == 1:
+                    return self.users_history(split_text[0][1:])
+                else:
+                    return self.send_message(self.get_im_channel_id(split_text[0][1:]), " ".join(split_text[1:]))
 
             if split_text[0] == "list":
                 if split_text[1] == "channels":
