@@ -35,6 +35,11 @@ windows = _platform == "win32"
 from utils import TextUtils
 from completer import Completer
 
+import threading
+from realTime import rtm
+t = threading.Thread(target=rtm, args=(settings.token,))
+t.start()
+
 from slack import Slack
 from style import DocumentStyle
 
