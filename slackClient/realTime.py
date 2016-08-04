@@ -44,7 +44,7 @@ class rtm:
         elif "type" in message and message["type"] == "presence_change":
             self.socket_pref_change(message)
 
-        elif "type" in message and message["type"] == "reconnect_url":
+        elif "type" in message and (message["type"] == "reconnect_url" or message["type"] == "channel_marked"):
             return
         else:
             print "\n" + str(message)

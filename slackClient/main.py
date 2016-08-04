@@ -132,7 +132,6 @@ def main():
                       completer=Completer(fuzzy_match=False,
                                           text_utils=TextUtils()),
                       complete_while_typing=Always(),
-                      get_bottom_toolbar_tokens=get_bottom_toolbar_tokens,
                       key_bindings_registry=manager.registry,
                       accept_action=AcceptAction.RETURN_DOCUMENT
         )
