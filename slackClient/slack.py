@@ -346,6 +346,9 @@ class Slack(object):
             if split_text[0][0] == "#":
                 if len(split_text) == 1:
                     return self.channels_history(split_text[0][1:])
+                else:
+                    return self.send_message(self.find_channel_id(split_text[0][1:]), " ".join(split_text[1:]))
+
             if split_text[0][0] == "@":
                 if len(split_text) == 1:
                     return self.users_history(split_text[0][1:])
