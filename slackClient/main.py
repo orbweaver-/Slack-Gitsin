@@ -50,59 +50,8 @@ windows = _platform == "win32"
 t = threading.Thread(target=rtm, args=(settings.token,))
 t.start()
 
-def find_user_name(user_id):
-    url = "https://www.slack.com/api/users.list?token={token}".format(token=settings.token)
-    response = requests.get(url).json()
-    for i in response["members"]:
-        if i["id"] == user_id:
-            return i["name"]
-    return None
-
-
-def get_alert(text):
-    #TODO : add notification sound
-    url = "https://www.slack.com/api/auth.test?token={token}".format(token=settings.token)
-    response = requests.get(url).json()
-    my_user_id = "<@" + response["user_id"] + ">"
-    for i in text:
-        if "text" in i:
-            if my_user_id in i['text']:
-                i["text"] = i["text"].replace(my_user_id, "@" + find_user_name(response["user_id"]))
-                if os.name == "posix":
-                    cmd = """osascript -e 'display notification "{message}" with title "{title}" ' """.format(message=find_user_name(i["user"]) + " : " + i['text'], title="You have a new message")
-                    os.system(cmd)
-                else:
-                    os.system(
-                        "notify-send -i " + settings.slack_logo + " 'you have new message' '{user} : {message}'".format(
-                            user=find_user_name(i["user"]), message=i['text']))
-
-
-def call_repeatedly(interval, func, *args):
-    stopped = Event()
-    def loop():
-        while not stopped.wait(interval):  # the first call is in `interval` secs
-            func(*args)
-
-    Thread(target=loop).start()
-    return stopped.set
-
-
-def check_notification():
-    sc = slackclient.SlackClient(settings.token)
-    if sc.rtm_connect():
-        while True:
-            get_alert(sc.rtm_read())  # send dictionary
-            # print sc.rtm_read()
-    else:
-        print "Connection Failed, invalid token?"
-
-
-stop = call_repeatedly(2, check_notification)  # call check_notification every 2 second
-
-
 def get_bottom_toolbar_tokens(cli):
     return [(Token.Toolbar, ' F10 : Exit ')]
-
 
 @manager.registry.add_binding(Keys.F10)
 def _(event):
@@ -111,7 +60,6 @@ def _(event):
             Quit when the `F10` key is pressed
         """
         pid = os.getpid()
-        stop()  # stop thread
         os.kill(pid, signal.SIGTERM)  # or signal.SIGKILL
         quit()  # exit the program
 
