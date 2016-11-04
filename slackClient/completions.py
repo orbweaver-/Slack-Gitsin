@@ -71,11 +71,9 @@ SUBCOMMANDS = {
 	"channels.create" 	: "Creates a channels. ",
 	"users.info"  	    : "Gets information about a user.",
 	"users.list"        : "Lists all users in a Slack team."
-
 }
 
 ARGS_OPTS_LOOKUP = {
-
     'channels.history': {
         'args': 'Show',
         'opts': list(channels.keys()),

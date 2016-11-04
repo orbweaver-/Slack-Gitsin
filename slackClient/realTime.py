@@ -49,14 +49,13 @@ class rtm:
             print "\n" + str(message)
 
     def typing(self, message):
-        print "\n" + str(message)
-        text += Style.RESET_ALL + Style.BRIGHT + "#" + self.get_channel_name(message["channel"])
+        text = Style.RESET_ALL + Style.BRIGHT + "#" + self.get_channel_name(message["channel"])
         text += Style.BRIGHT + Fore.RED + "@"
         if "user" in message:
             text += Slack.find_user_name(s, message["user"]) + ": "
         elif "username" in message:
             text += i["username"] + ": "
-        text += Style.RESET_ALL + Slack.format_text(s, "is typing") + '\n\n'
+        text += Style.RESET_ALL + Slack.format_text(s, "is typing")
         sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
 
     def socket_hello(self, message):
@@ -90,7 +89,7 @@ class rtm:
         elif "username" in message:
             text += i["username"] + ": "
         # Add the text
-        text += Style.RESET_ALL + Slack.format_text(s, message["text"]) + '\n\n'
+        text += Style.RESET_ALL + Slack.format_text(s, message["text"]) + '\n'
         sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
 
     def socket_presence_change(self, message):

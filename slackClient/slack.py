@@ -288,11 +288,11 @@ class Slack(object):
             text = re.sub('```.*```', formatted, text, 1, re.DOTALL)
         return text
 
-    def print_channels_list(self, channels):
+    def print_channels_list(self):
         text = Style.BRIGHT
         colors = [Fore.YELLOW, Fore.RED]
         i = True
-        for c in channels:
+        for c in self.get_channels_list():
             if i:
                 text += colors[0]
             else:
@@ -357,16 +357,19 @@ class Slack(object):
 
             if split_text[0] == "list":
                 if split_text[1] == "channels":
-                    self.print_channels_list(self.get_channels_list())
-
-            if split_text[1] == "channels.list":
-                response = self.get_channels_list()
-                self.print_channels_list(response)
-            elif split_text[1] == "channels.join":
-                if len(split_text) < 4:
-                    print "Please enter values properly"
-                else:
+                    self.print_channels_list()
+            if split_text[0] == "join":
+                if len(split_text) == 2 and split_text[1][0]:
                     self.channels_join(split_text[3])
+                else:
+                    print "Please specify a channel"
+
+            """
+                TODO
+                history #....
+                    self.channels_history(split_text[3])
+                say
+
             elif split_text[1] == "channels.history":
                 if len(split_text) < 4:
                     print "Please enter values properly!"
@@ -384,5 +387,6 @@ class Slack(object):
                 self.users_info(split_text[3])
             elif split_text[1] == "files.upload":
                 self.file_upload(split_text[3])
+            """
         except:
             print "something goes wrong!"
