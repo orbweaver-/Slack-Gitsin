@@ -37,17 +37,27 @@ class rtm:
         text = ""
         if "type" in message and message["type"] == "hello":
             self.socket_hello(message)
-
         elif "type" in message and message["type"] == "message":
             self.socket_message(message)
-
         elif "type" in message and message["type"] == "presence_change":
-            self.socket_pref_change(message)
-
+            self.socket_presence_change(message)
+        elif "type" in message and (message["type"] == "user_typing"):
+            self.typing(message)
         elif "type" in message and (message["type"] == "reconnect_url" or message["type"] == "channel_marked"):
             return
         else:
             print "\n" + str(message)
+
+    def typing(self, message):
+        print "\n" + str(message)
+        text += Style.RESET_ALL + Style.BRIGHT + "#" + self.get_channel_name(message["channel"])
+        text += Style.BRIGHT + Fore.RED + "@"
+        if "user" in message:
+            text += Slack.find_user_name(s, message["user"]) + ": "
+        elif "username" in message:
+            text += i["username"] + ": "
+        text += Style.RESET_ALL + Slack.format_text(s, "is typing") + '\n\n'
+        sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
 
     def socket_hello(self, message):
         text = "\nSlack messaging connected"
@@ -83,6 +93,6 @@ class rtm:
         text += Style.RESET_ALL + Slack.format_text(s, message["text"]) + '\n\n'
         sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
 
-    def socket_pref_change(self, message):
+    def socket_presence_change(self, message):
         text = Style.BRIGHT + Fore.RED + "\n@" + Slack.find_user_name(s, message["user"]) + Style.RESET_ALL + " is now " + Fore.YELLOW + message["presence"] + "\n" + Style.RESET_ALL
         sys.stdout.write(str((text.encode('ascii', 'ignore').decode('ascii'))))
